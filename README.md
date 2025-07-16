@@ -25,6 +25,85 @@ O **Xperience Hotsite Paymente** é uma solução digital inovadora que permite 
 
 ## Funcionalidades Principais
 
+# Arquitetura do Projeto e Ciclo de Vida
+
+## Visão Geral da Arquitetura
+
+O **Xperience Hotsite Paymente** utiliza uma arquitetura moderna e modular composta por três principais camadas:
+
+- **Frontend**: Construído em React.js (ou similar), responsável pela interface com o usuário, tanto lojista quanto cliente.
+- **Backend**: Desenvolvido em Node.js (ou similar), gerencia regras de negócios, autenticação e integração com APIs externas, como Pix.
+- **Blockchain/Smart Contracts**: Utiliza contratos inteligentes (Ethereum, Polygon, etc.) para automação, segurança das transações e emissão de NFTs.
+
+A hospedagem e interface web são fornecidas pelo domínio principal:  
+`xperiencehubs.com`
+
+## Etapas do Ciclo de Vida da Loja
+
+### 1. Cadastro do Lojista
+
+O lojista realiza o cadastro preenchendo as seguintes informações:
+
+- Nome da loja
+- Chave PIX
+- Celular
+- Site (URL)
+- Lista de produtos
+- Lista de eventos
+
+Esta etapa é fundamental para criar o perfil da loja e parametrizar suas ofertas.
+
+### 2. Pagamento da Taxa de Ativação
+
+Ao efetuar o cadastro, o lojista deve pagar:
+
+- **Taxa de Deploy:** R$ 1,00 (pagamento único para ativação da loja no blockchain)
+- **Comissão sobre vendas:** 0,5% sobre todas as transações (cobrada automaticamente pela plataforma)
+
+O pagamento é feito via integração **Pix**, que garante rapidez e praticidade.
+
+### 3. Deploy Automatizado
+
+Com o cadastro e o pagamento confirmados:
+
+- Um smart contract é implantado automaticamente para gerenciar os produtos/eventos, recebimentos e emissão de NFTs da loja do lojista.
+- A loja recebe um endereço único no formato:
+
+```
+https://xperiencehubs.com/
+```
+
+### 4. Operação da Loja Online
+
+Ao acessar seu endereço exclusivo, o lojista (e os clientes) visualizam a loja online já configurada:
+
+- Lista de produtos/eventos cadastrados
+- Botão para pagamento via Pix, já integrado e funcionando
+- Painel administrativo para o lojista acompanhar as vendas e métricas
+- Automação de emissão de NFTs como comprovantes de compra ou ingressos digitais
+
+### 5. Vendas e Comissões
+
+- Toda venda realizada através do site utiliza Pix, com confirmação instantânea.
+- O smart contract repassa automaticamente ao lojista o valor da venda, descontando a comissão da plataforma.
+
+### 6. Pós-Venda e Validações
+
+- O comprador recebe um NFT como comprovante/ingresso.
+- Pode acessar conteúdos ou eventos exclusivos ao validar o NFT na própria plataforma.
+
+## Fluxo Resumido do Ciclo de Vida
+
+1. **Cadastro** → 2. **Pagamento Taxa Pix** → 3. **Deploy Smart Contract** → 4. **Loja Online Ativa** → 5. **Vendas com Pix** → 6. **Comissão Automática** → 7. **Emissão e Validação de NFT**
+
+## Diferenciais Técnicos
+
+- **Deploy em minutos:** Lançamento automatizado de lojas.
+- **Pagamentos instantâneos:** Pix totalmente integrado.
+- **Segurança extra:** Smart contract controla vendas, repasses e NFTs.
+- **Personalização:** Cada loja tem endereço e layout próprios, além de dashboard exclusivo para o lojista.
+- **Conteúdo exclusivo:** NFTs usados como ingresso/comprovante, com validação automática.
+
 ### Para o Lojista
 
 - Cadastro e autenticação de lojistas
