@@ -12,6 +12,8 @@ The folder architecture of the Xperience Hubs Payment project is designed to ref
 │   │   ├── checkout.js      # Dynamic checkout
 │   │   ├── products/
 │   │   │   └── [productId].js # Product details
+│   │   ├── conference/
+│   │   │   └── [conferenceId].js # Evento presencial ou online.
 │   │   ├── dashboard.js     # Admin dashboard
 │   │   └── [...slug].js     # Catch-all for custom routes
 │   └── api/                 # Custom APIs (if needed)
