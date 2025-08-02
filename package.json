@@ -21,7 +21,6 @@
     "test:coverage": "jest --coverage",
     "type-check": "tsc --noEmit",
     "clean": "rm -rf dist .next",
-    "prepare": "npm run build",
     "prepublishOnly": "npm run test && npm run type-check",
     "publish:npm": "npm publish --access public",
     "publish:patch": "npm version patch && npm run publish:npm",
@@ -70,11 +69,12 @@
     "@privy-io/react-auth": "^1.0.0",
     "ethers": "^6.0.0",
     "web3": "^4.0.0",
-    "@alchemy-sdk/alchemy": "^2.0.0",
     "axios": "^1.0.0",
     "clsx": "^2.0.0",
     "class-variance-authority": "^0.7.0",
-    "lucide-react": "^0.300.0"
+    "lucide-react": "^0.300.0",
+    "@radix-ui/react-slot": "^1.0.0",
+    "react-hot-toast": "^2.4.0"
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
