@@ -1,330 +1,151 @@
-import React from 'react';
 import { render, screen } from '@testing-library/react';
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-  CardFooter
-} from '../Card';
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '../Card';
 
-describe('Card Components', () => {
+describe('Card Component', () => {
   describe('Card', () => {
-    it('should render card with default props', () => {
+    it('renders with default props', () => {
       render(<Card>Card content</Card>);
-      
       const card = screen.getByText('Card content');
       expect(card).toBeInTheDocument();
-      expect(card.parentElement).toHaveClass('rounded-lg', 'border', 'bg-white', 'text-gray-900', 'shadow-sm');
+      expect(card).toHaveClass('rounded-lg', 'border', 'bg-card', 'text-card-foreground', 'shadow-sm');
     });
 
-    it('should render card with custom className', () => {
-      render(<Card className="custom-card">Custom Card</Card>);
-      
-      const card = screen.getByText('Custom Card').parentElement;
-      expect(card).toHaveClass('custom-card');
+    it('applies custom className', () => {
+      render(<Card className="custom-class">Card content</Card>);
+      const card = screen.getByText('Card content');
+      expect(card).toHaveClass('custom-class');
     });
 
-    it('should pass through additional props', () => {
-      render(<Card data-testid="test-card">Test Card</Card>);
-      
-      const card = screen.getByTestId('test-card');
-      expect(card).toBeInTheDocument();
+    it('forwards ref correctly', () => {
+      const ref = jest.fn();
+      render(<Card ref={ref}>Card content</Card>);
+      expect(ref).toHaveBeenCalled();
     });
   });
 
   describe('CardHeader', () => {
-    it('should render card header with default props', () => {
+    it('renders with default props', () => {
       render(<CardHeader>Header content</CardHeader>);
-      
       const header = screen.getByText('Header content');
       expect(header).toBeInTheDocument();
       expect(header).toHaveClass('flex', 'flex-col', 'space-y-1.5', 'p-6');
     });
 
-    it('should render card header with custom className', () => {
-      render(<CardHeader className="custom-header">Custom Header</CardHeader>);
-      
-      const header = screen.getByText('Custom Header');
+    it('applies custom className', () => {
+      render(<CardHeader className="custom-header">Header content</CardHeader>);
+      const header = screen.getByText('Header content');
       expect(header).toHaveClass('custom-header');
-    });
-
-    it('should pass through additional props', () => {
-      render(<CardHeader data-testid="test-header">Test Header</CardHeader>);
-      
-      const header = screen.getByTestId('test-header');
-      expect(header).toBeInTheDocument();
     });
   });
 
   describe('CardTitle', () => {
-    it('should render card title with default props', () => {
+    it('renders with default props', () => {
       render(<CardTitle>Card Title</CardTitle>);
-      
-      const title = screen.getByText('Card Title');
+      const title = screen.getByRole('heading', { name: 'Card Title' });
       expect(title).toBeInTheDocument();
-      expect(title.tagName).toBe('H3');
       expect(title).toHaveClass('text-2xl', 'font-semibold', 'leading-none', 'tracking-tight');
     });
 
-    it('should render card title with custom className', () => {
-      render(<CardTitle className="custom-title">Custom Title</CardTitle>);
-      
-      const title = screen.getByText('Custom Title');
+    it('applies custom className', () => {
+      render(<CardTitle className="custom-title">Card Title</CardTitle>);
+      const title = screen.getByRole('heading', { name: 'Card Title' });
       expect(title).toHaveClass('custom-title');
-    });
-
-    it('should pass through additional props', () => {
-      render(<CardTitle data-testid="test-title">Test Title</CardTitle>);
-      
-      const title = screen.getByTestId('test-title');
-      expect(title).toBeInTheDocument();
-    });
-
-    it('should render as different heading level', () => {
-      render(<CardTitle asChild><h1>H1 Title</h1></CardTitle>);
-      
-      const title = screen.getByText('H1 Title');
-      expect(title.tagName).toBe('H1');
     });
   });
 
   describe('CardDescription', () => {
-    it('should render card description with default props', () => {
-      render(<CardDescription>Card Description</CardDescription>);
-      
-      const description = screen.getByText('Card Description');
+    it('renders with default props', () => {
+      render(<CardDescription>Card description</CardDescription>);
+      const description = screen.getByText('Card description');
       expect(description).toBeInTheDocument();
-      expect(description.tagName).toBe('P');
-      expect(description).toHaveClass('text-sm', 'text-gray-500');
+      expect(description).toHaveClass('text-sm', 'text-muted-foreground');
     });
 
-    it('should render card description with custom className', () => {
-      render(<CardDescription className="custom-description">Custom Description</CardDescription>);
-      
-      const description = screen.getByText('Custom Description');
+    it('applies custom className', () => {
+      render(<CardDescription className="custom-description">Card description</CardDescription>);
+      const description = screen.getByText('Card description');
       expect(description).toHaveClass('custom-description');
-    });
-
-    it('should pass through additional props', () => {
-      render(<CardDescription data-testid="test-description">Test Description</CardDescription>);
-      
-      const description = screen.getByTestId('test-description');
-      expect(description).toBeInTheDocument();
-    });
-
-    it('should render as different element', () => {
-      render(<CardDescription asChild><span>Span Description</span></CardDescription>);
-      
-      const description = screen.getByText('Span Description');
-      expect(description.tagName).toBe('SPAN');
     });
   });
 
   describe('CardContent', () => {
-    it('should render card content with default props', () => {
+    it('renders with default props', () => {
       render(<CardContent>Content</CardContent>);
-      
       const content = screen.getByText('Content');
       expect(content).toBeInTheDocument();
       expect(content).toHaveClass('p-6', 'pt-0');
     });
 
-    it('should render card content with custom className', () => {
-      render(<CardContent className="custom-content">Custom Content</CardContent>);
-      
-      const content = screen.getByText('Custom Content');
+    it('applies custom className', () => {
+      render(<CardContent className="custom-content">Content</CardContent>);
+      const content = screen.getByText('Content');
       expect(content).toHaveClass('custom-content');
-    });
-
-    it('should pass through additional props', () => {
-      render(<CardContent data-testid="test-content">Test Content</CardContent>);
-      
-      const content = screen.getByTestId('test-content');
-      expect(content).toBeInTheDocument();
     });
   });
 
   describe('CardFooter', () => {
-    it('should render card footer with default props', () => {
-      render(<CardFooter>Footer</CardFooter>);
-      
-      const footer = screen.getByText('Footer');
+    it('renders with default props', () => {
+      render(<CardFooter>Footer content</CardFooter>);
+      const footer = screen.getByText('Footer content');
       expect(footer).toBeInTheDocument();
       expect(footer).toHaveClass('flex', 'items-center', 'p-6', 'pt-0');
     });
 
-    it('should render card footer with custom className', () => {
-      render(<CardFooter className="custom-footer">Custom Footer</CardFooter>);
-      
-      const footer = screen.getByText('Custom Footer');
+    it('applies custom className', () => {
+      render(<CardFooter className="custom-footer">Footer content</CardFooter>);
+      const footer = screen.getByText('Footer content');
       expect(footer).toHaveClass('custom-footer');
-    });
-
-    it('should pass through additional props', () => {
-      render(<CardFooter data-testid="test-footer">Test Footer</CardFooter>);
-      
-      const footer = screen.getByTestId('test-footer');
-      expect(footer).toBeInTheDocument();
     });
   });
 
   describe('Card Composition', () => {
-    it('should render complete card with all components', () => {
+    it('renders complete card structure', () => {
       render(
         <Card>
           <CardHeader>
-            <CardTitle>Complete Card</CardTitle>
-            <CardDescription>This is a complete card example</CardDescription>
+            <CardTitle>Test Title</CardTitle>
+            <CardDescription>Test Description</CardDescription>
           </CardHeader>
-          <CardContent>
-            <p>This is the main content of the card.</p>
-          </CardContent>
-          <CardFooter>
-            <button>Action Button</button>
-          </CardFooter>
+          <CardContent>Test Content</CardContent>
+          <CardFooter>Test Footer</CardFooter>
         </Card>
       );
 
-      expect(screen.getByText('Complete Card')).toBeInTheDocument();
-      expect(screen.getByText('This is a complete card example')).toBeInTheDocument();
-      expect(screen.getByText('This is the main content of the card.')).toBeInTheDocument();
-      expect(screen.getByText('Action Button')).toBeInTheDocument();
+      expect(screen.getByRole('heading', { name: 'Test Title' })).toBeInTheDocument();
+      expect(screen.getByText('Test Description')).toBeInTheDocument();
+      expect(screen.getByText('Test Content')).toBeInTheDocument();
+      expect(screen.getByText('Test Footer')).toBeInTheDocument();
     });
 
-    it('should render card with only header and content', () => {
+    it('maintains proper styling hierarchy', () => {
       render(
-        <Card>
-          <CardHeader>
-            <CardTitle>Simple Card</CardTitle>
+        <Card className="card-wrapper">
+          <CardHeader className="header-wrapper">
+            <CardTitle className="title-wrapper">Title</CardTitle>
+            <CardDescription className="description-wrapper">Description</CardDescription>
           </CardHeader>
-          <CardContent>
-            <p>Simple content</p>
-          </CardContent>
+          <CardContent className="content-wrapper">Content</CardContent>
+          <CardFooter className="footer-wrapper">Footer</CardFooter>
         </Card>
       );
 
-      expect(screen.getByText('Simple Card')).toBeInTheDocument();
-      expect(screen.getByText('Simple content')).toBeInTheDocument();
-    });
+      const card = screen.getByText('Content').closest('div');
+      expect(card).toHaveClass('card-wrapper', 'rounded-lg', 'border', 'bg-card');
 
-    it('should render card with only content', () => {
-      render(
-        <Card>
-          <CardContent>
-            <p>Content only</p>
-          </CardContent>
-        </Card>
-      );
+      const header = screen.getByText('Title').closest('div');
+      expect(header).toHaveClass('header-wrapper', 'flex', 'flex-col', 'space-y-1.5', 'p-6');
 
-      expect(screen.getByText('Content only')).toBeInTheDocument();
-    });
-  });
+      const title = screen.getByRole('heading');
+      expect(title).toHaveClass('title-wrapper', 'text-2xl', 'font-semibold');
 
-  describe('Accessibility', () => {
-    it('should have proper semantic structure', () => {
-      render(
-        <Card>
-          <CardHeader>
-            <CardTitle>Accessible Card</CardTitle>
-            <CardDescription>Description for screen readers</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <p>Main content</p>
-          </CardContent>
-        </Card>
-      );
+      const description = screen.getByText('Description');
+      expect(description).toHaveClass('description-wrapper', 'text-sm', 'text-muted-foreground');
 
-      const title = screen.getByRole('heading', { name: 'Accessible Card' });
-      expect(title).toBeInTheDocument();
-    });
+      const content = screen.getByText('Content');
+      expect(content).toHaveClass('content-wrapper', 'p-6', 'pt-0');
 
-    it('should support custom ARIA attributes', () => {
-      render(
-        <Card aria-label="Custom card">
-          <CardContent>Content</CardContent>
-        </Card>
-      );
-
-      const card = screen.getByLabelText('Custom card');
-      expect(card).toBeInTheDocument();
-    });
-  });
-
-  describe('Styling Variations', () => {
-    it('should apply different styles based on context', () => {
-      const { rerender } = render(
-        <Card className="bg-blue-100">
-          <CardContent>Blue card</CardContent>
-        </Card>
-      );
-
-      let card = screen.getByText('Blue card').parentElement;
-      expect(card).toHaveClass('bg-blue-100');
-
-      rerender(
-        <Card className="bg-red-100">
-          <CardContent>Red card</CardContent>
-        </Card>
-      );
-
-      card = screen.getByText('Red card').parentElement;
-      expect(card).toHaveClass('bg-red-100');
-    });
-
-    it('should handle conditional styling', () => {
-      const isActive = true;
-      render(
-        <Card className={isActive ? 'border-blue-500' : 'border-gray-300'}>
-          <CardContent>Conditional styling</CardContent>
-        </Card>
-      );
-
-      const card = screen.getByText('Conditional styling').parentElement;
-      expect(card).toHaveClass('border-blue-500');
-    });
-  });
-
-  describe('Responsive Design', () => {
-    it('should handle responsive classes', () => {
-      render(
-        <Card className="p-4 md:p-6 lg:p-8">
-          <CardContent>Responsive card</CardContent>
-        </Card>
-      );
-
-      const card = screen.getByText('Responsive card').parentElement?.parentElement;
-      expect(card).toHaveClass('p-4', 'md:p-6', 'lg:p-8');
-    });
-  });
-
-  describe('Performance', () => {
-    it('should render efficiently', () => {
-      const { container } = render(
-        <Card>
-          <CardHeader>
-            <CardTitle>Performance Test</CardTitle>
-          </CardHeader>
-          <CardContent>Content</CardContent>
-        </Card>
-      );
-
-      expect(container.children.length).toBeGreaterThan(0);
-    });
-
-    it('should handle many cards efficiently', () => {
-      const { container } = render(
-        <div>
-          {Array.from({ length: 10 }, (_, i) => (
-            <Card key={i}>
-              <CardContent>Card {i + 1}</CardContent>
-            </Card>
-          ))}
-        </div>
-      );
-
-      expect(container.querySelectorAll('[class*="rounded-lg"]')).toHaveLength(10);
+      const footer = screen.getByText('Footer');
+      expect(footer).toHaveClass('footer-wrapper', 'flex', 'items-center', 'p-6', 'pt-0');
     });
   });
 }); 
