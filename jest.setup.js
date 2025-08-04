@@ -35,28 +35,28 @@ Object.defineProperty(window, 'ethereum', {
   writable: true,
 });
 
-// Mock Privy
-jest.mock('@privy-io/react-auth', () => ({
-  usePrivy: () => ({
-    login: jest.fn(),
-    logout: jest.fn(),
-    authenticated: false,
-    user: null,
-    ready: true,
-  }),
-  PrivyProvider: ({ children }) => children,
-}));
+// Mock Privy (comentado - descomente se usar Privy)
+// jest.mock('@privy-io/react-auth', () => ({
+//   usePrivy: () => ({
+//     login: jest.fn(),
+//     logout: jest.fn(),
+//     authenticated: false,
+//     user: null,
+//     ready: true,
+//   }),
+//   PrivyProvider: ({ children }) => children,
+// }));
 
-// Mock ethers
-jest.mock('ethers', () => ({
-  ethers: {
-    providers: {
-      JsonRpcProvider: jest.fn(),
-    },
-    Contract: jest.fn(),
-    utils: {
-      parseEther: jest.fn(),
-      formatEther: jest.fn(),
-    },
-  },
-})); 
+// Mock ethers (comentado - descomente se usar ethers)
+// jest.mock('ethers', () => ({
+//   ethers: {
+//     providers: {
+//       JsonRpcProvider: jest.fn(),
+//     },
+//     Contract: jest.fn(),
+//     utils: {
+//       parseEther: jest.fn(),
+//       formatEther: jest.fn(),
+//     },
+//   },
+// })); 

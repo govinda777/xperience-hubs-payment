@@ -213,7 +213,9 @@ export class ProcessPaymentUseCase {
       }
 
       // Convert required amount to crypto equivalent (simplified)
-      const requiredCryptoAmount = requiredAmount.amount / 100; // Assuming 1:1 conversion
+      // Assuming 1 BRL = 0.001 ETH (for testing purposes)
+      const requiredCryptoAmount = requiredAmount.amount * 0.001; // Convert from centavos to ETH
+      
       if (numericAmount < requiredCryptoAmount) {
         return false;
       }
@@ -260,25 +262,43 @@ export class ProcessPaymentUseCase {
       const nftTokens: Array<{ tokenId: string; contractAddress: string }> = [];
 
       for (const item of order.items) {
-        if (item.product.nftConfig?.enabled) {
+        // Check if item has NFT configuration in attributes
+        const nftConfig = item.attributes.nftConfig as any;
+        if (nftConfig && nftConfig.enabled) {
           const mintRequest = {
-            productId: item.product.id,
+            productId: item.productId,
             merchantId: merchant.id,
             userId: order.userId,
             orderId: order.id,
             metadata: {
-              name: `${item.product.name} - Order ${order.id}`,
-              description: `NFT for ${item.product.name} purchased in order ${order.id}`,
-              image: item.product.images[0] || '',
-              attributes: {
-                orderId: order.id,
-                productId: item.product.id,
-                merchantId: merchant.id,
-                purchaseDate: order.createdAt.toISOString(),
-                ...item.product.attributes
-              }
+              name: `${item.productName} - Order ${order.id}`,
+              description: `NFT for ${item.productName} purchased in order ${order.id}`,
+              image: item.productImage || '',
+              attributes: [
+                {
+                  trait_type: 'orderId',
+                  value: order.id,
+                },
+                {
+                  trait_type: 'productId',
+                  value: item.productId,
+                },
+                {
+                  trait_type: 'merchantId',
+                  value: merchant.id,
+                },
+                {
+                  trait_type: 'purchaseDate',
+                  value: order.createdAt.toISOString(),
+                  display_type: 'date' as const,
+                },
+                ...Object.entries(item.attributes).map(([key, value]) => ({
+                  trait_type: key,
+                  value: value,
+                }))
+              ]
             },
-            tokenType: item.product.nftConfig.tokenType || 'ERC-721',
+            tokenType: (nftConfig.tokenType as 'ERC-721' | 'ERC-1155') || 'ERC-721',
             quantity: item.quantity
           };
 

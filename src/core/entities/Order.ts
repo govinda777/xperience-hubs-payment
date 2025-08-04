@@ -184,6 +184,12 @@ export class Order {
     } else {
       this.shipping = shipping as OrderShipping;
     }
+    
+    // Update shippingCost if cost is provided
+    if (shipping.cost) {
+      this.shippingCost = shipping.cost;
+    }
+    
     this.recalculateTotals();
     this.updatedAt = new Date();
   }

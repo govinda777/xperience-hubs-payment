@@ -41,6 +41,8 @@ export interface MerchantSettings {
   notificationEmail: boolean;
   notificationSMS: boolean;
   webhookUrl?: string;
+  splitPercentage?: number;
+  nftEnabled?: boolean;
 }
 
 export interface MerchantStats {
