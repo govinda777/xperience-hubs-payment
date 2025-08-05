@@ -1,5 +1,28 @@
 import { renderHook, act } from '@testing-library/react';
 import { useCartStore } from '../cartStore';
+import { Product } from '@/core/entities/Product';
+
+// Helper function to create test products
+const createTestProduct = (overrides: Partial<{
+  id: string;
+  name: string;
+  price: number;
+  description: string;
+}> = {}): Product => {
+  return new Product({
+    id: overrides.id || 'product-1',
+    merchantId: 'merchant-1',
+    name: overrides.name || 'Test Product',
+    description: overrides.description || 'A test product',
+    price: {
+      amount: overrides.price || 99.99,
+      currency: 'BRL',
+      formatted: `R$ ${(overrides.price || 99.99).toFixed(2).replace('.', ',')}`,
+    },
+    category: 'digital_product',
+    ...overrides,
+  });
+};
 
 describe('Cart Store', () => {
   beforeEach(() => {
@@ -24,12 +47,11 @@ describe('Cart Store', () => {
   describe('addItem', () => {
     it('should add a new item to cart', () => {
       const { result } = renderHook(() => useCartStore());
+      const product = createTestProduct();
       const item = {
-        id: 'product-1',
-        name: 'Test Product',
-        price: 99.99,
+        product,
         quantity: 1,
-        image: 'https://example.com/image.jpg'
+        attributes: {},
       };
 
       act(() => {
@@ -37,17 +59,17 @@ describe('Cart Store', () => {
       });
 
       expect(result.current.items).toHaveLength(1);
-      expect(result.current.items[0]).toEqual(item);
+      expect(result.current.items[0].product.id).toBe('product-1');
+      expect(result.current.items[0].quantity).toBe(1);
     });
 
     it('should increase quantity when adding same item', () => {
       const { result } = renderHook(() => useCartStore());
+      const product = createTestProduct();
       const item = {
-        id: 'product-1',
-        name: 'Test Product',
-        price: 99.99,
+        product,
         quantity: 1,
-        image: 'https://example.com/image.jpg'
+        attributes: {},
       };
 
       act(() => {
@@ -61,19 +83,17 @@ describe('Cart Store', () => {
 
     it('should add different items separately', () => {
       const { result } = renderHook(() => useCartStore());
+      const product1 = createTestProduct({ id: 'product-1', name: 'Product 1', price: 99.99 });
+      const product2 = createTestProduct({ id: 'product-2', name: 'Product 2', price: 149.99 });
       const item1 = {
-        id: 'product-1',
-        name: 'Product 1',
-        price: 99.99,
+        product: product1,
         quantity: 1,
-        image: 'https://example.com/image1.jpg'
+        attributes: {},
       };
       const item2 = {
-        id: 'product-2',
-        name: 'Product 2',
-        price: 149.99,
+        product: product2,
         quantity: 1,
-        image: 'https://example.com/image2.jpg'
+        attributes: {},
       };
 
       act(() => {
@@ -82,25 +102,29 @@ describe('Cart Store', () => {
       });
 
       expect(result.current.items).toHaveLength(2);
-      expect(result.current.items[0].id).toBe('product-1');
-      expect(result.current.items[1].id).toBe('product-2');
+      expect(result.current.items[0].product.id).toBe('product-1');
+      expect(result.current.items[1].product.id).toBe('product-2');
     });
   });
 
   describe('removeItem', () => {
     it('should remove item by id', () => {
       const { result } = renderHook(() => useCartStore());
+      const product = createTestProduct();
       const item = {
-        id: 'product-1',
-        name: 'Test Product',
-        price: 99.99,
+        product,
         quantity: 1,
-        image: 'https://example.com/image.jpg'
+        attributes: {},
       };
 
+      let itemId: string;
       act(() => {
         result.current.addItem(item);
-        result.current.removeItem('product-1');
+        itemId = result.current.items[0].id;
+      });
+
+      act(() => {
+        result.current.removeItem(itemId);
       });
 
       expect(result.current.items).toHaveLength(0);
@@ -108,12 +132,11 @@ describe('Cart Store', () => {
 
     it('should not remove non-existent item', () => {
       const { result } = renderHook(() => useCartStore());
+      const product = createTestProduct();
       const item = {
-        id: 'product-1',
-        name: 'Test Product',
-        price: 99.99,
+        product,
         quantity: 1,
-        image: 'https://example.com/image.jpg'
+        attributes: {},
       };
 
       act(() => {
@@ -128,17 +151,21 @@ describe('Cart Store', () => {
   describe('updateQuantity', () => {
     it('should update item quantity', () => {
       const { result } = renderHook(() => useCartStore());
+      const product = createTestProduct();
       const item = {
-        id: 'product-1',
-        name: 'Test Product',
-        price: 99.99,
+        product,
         quantity: 1,
-        image: 'https://example.com/image.jpg'
+        attributes: {},
       };
 
+      let itemId: string;
       act(() => {
         result.current.addItem(item);
-        result.current.updateQuantity('product-1', 3);
+        itemId = result.current.items[0].id;
+      });
+
+      act(() => {
+        result.current.updateQuantity(itemId, 3);
       });
 
       expect(result.current.items[0].quantity).toBe(3);
@@ -146,17 +173,21 @@ describe('Cart Store', () => {
 
     it('should remove item when quantity is 0', () => {
       const { result } = renderHook(() => useCartStore());
+      const product = createTestProduct();
       const item = {
-        id: 'product-1',
-        name: 'Test Product',
-        price: 99.99,
+        product,
         quantity: 1,
-        image: 'https://example.com/image.jpg'
+        attributes: {},
       };
 
+      let itemId: string;
       act(() => {
         result.current.addItem(item);
-        result.current.updateQuantity('product-1', 0);
+        itemId = result.current.items[0].id;
+      });
+
+      act(() => {
+        result.current.updateQuantity(itemId, 0);
       });
 
       expect(result.current.items).toHaveLength(0);
@@ -164,12 +195,11 @@ describe('Cart Store', () => {
 
     it('should not update non-existent item', () => {
       const { result } = renderHook(() => useCartStore());
+      const product = createTestProduct();
       const item = {
-        id: 'product-1',
-        name: 'Test Product',
-        price: 99.99,
+        product,
         quantity: 1,
-        image: 'https://example.com/image.jpg'
+        attributes: {},
       };
 
       act(() => {
@@ -184,19 +214,17 @@ describe('Cart Store', () => {
   describe('clearCart', () => {
     it('should clear all items from cart', () => {
       const { result } = renderHook(() => useCartStore());
+      const product1 = createTestProduct({ id: 'product-1', name: 'Product 1', price: 99.99 });
+      const product2 = createTestProduct({ id: 'product-2', name: 'Product 2', price: 149.99 });
       const item1 = {
-        id: 'product-1',
-        name: 'Product 1',
-        price: 99.99,
+        product: product1,
         quantity: 1,
-        image: 'https://example.com/image1.jpg'
+        attributes: {},
       };
       const item2 = {
-        id: 'product-2',
-        name: 'Product 2',
-        price: 149.99,
+        product: product2,
         quantity: 2,
-        image: 'https://example.com/image2.jpg'
+        attributes: {},
       };
 
       act(() => {
@@ -268,19 +296,17 @@ describe('Cart Store', () => {
   describe('Computed Properties', () => {
     it('should calculate total price correctly', () => {
       const { result } = renderHook(() => useCartStore());
+      const product1 = createTestProduct({ id: 'product-1', name: 'Product 1', price: 100 });
+      const product2 = createTestProduct({ id: 'product-2', name: 'Product 2', price: 50 });
       const item1 = {
-        id: 'product-1',
-        name: 'Product 1',
-        price: 100,
+        product: product1,
         quantity: 2,
-        image: 'https://example.com/image1.jpg'
+        attributes: {},
       };
       const item2 = {
-        id: 'product-2',
-        name: 'Product 2',
-        price: 50,
+        product: product2,
         quantity: 1,
-        image: 'https://example.com/image2.jpg'
+        attributes: {},
       };
 
       act(() => {
@@ -288,24 +314,23 @@ describe('Cart Store', () => {
         result.current.addItem(item2);
       });
 
-      expect(result.current.getTotalPrice()).toBe(250); // (100 * 2) + (50 * 1)
+      const totalPrice = result.current.getTotalPrice();
+      expect(totalPrice.amount).toBe(250); // (100 * 2) + (50 * 1)
     });
 
     it('should calculate total items correctly', () => {
       const { result } = renderHook(() => useCartStore());
+      const product1 = createTestProduct({ id: 'product-1', name: 'Product 1', price: 100 });
+      const product2 = createTestProduct({ id: 'product-2', name: 'Product 2', price: 50 });
       const item1 = {
-        id: 'product-1',
-        name: 'Product 1',
-        price: 100,
+        product: product1,
         quantity: 3,
-        image: 'https://example.com/image1.jpg'
+        attributes: {},
       };
       const item2 = {
-        id: 'product-2',
-        name: 'Product 2',
-        price: 50,
+        product: product2,
         quantity: 2,
-        image: 'https://example.com/image2.jpg'
+        attributes: {},
       };
 
       act(() => {
@@ -318,19 +343,17 @@ describe('Cart Store', () => {
 
     it('should return correct item count', () => {
       const { result } = renderHook(() => useCartStore());
+      const product1 = createTestProduct({ id: 'product-1', name: 'Product 1', price: 100 });
+      const product2 = createTestProduct({ id: 'product-2', name: 'Product 2', price: 50 });
       const item1 = {
-        id: 'product-1',
-        name: 'Product 1',
-        price: 100,
+        product: product1,
         quantity: 1,
-        image: 'https://example.com/image1.jpg'
+        attributes: {},
       };
       const item2 = {
-        id: 'product-2',
-        name: 'Product 2',
-        price: 50,
+        product: product2,
         quantity: 1,
-        image: 'https://example.com/image2.jpg'
+        attributes: {},
       };
 
       act(() => {
@@ -338,7 +361,7 @@ describe('Cart Store', () => {
         result.current.addItem(item2);
       });
 
-      expect(result.current.getItemCount()).toBe(2); // 2 different items
+      expect(result.current.getItemCount('product-1')).toBe(1); // 1 item of product-1
     });
 
     it('should check if cart has items', () => {
@@ -346,12 +369,11 @@ describe('Cart Store', () => {
 
       expect(result.current.hasItems()).toBe(false);
 
+      const product = createTestProduct();
       const item = {
-        id: 'product-1',
-        name: 'Product 1',
-        price: 100,
+        product,
         quantity: 1,
-        image: 'https://example.com/image1.jpg'
+        attributes: {},
       };
 
       act(() => {
@@ -366,12 +388,11 @@ describe('Cart Store', () => {
 
       expect(result.current.isEmpty()).toBe(true);
 
+      const product = createTestProduct();
       const item = {
-        id: 'product-1',
-        name: 'Product 1',
-        price: 100,
+        product,
         quantity: 1,
-        image: 'https://example.com/image1.jpg'
+        attributes: {},
       };
 
       act(() => {

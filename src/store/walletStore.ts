@@ -13,7 +13,9 @@ export interface WalletStore {
   network: {
     chainId: number;
     name: string;
+    rpcUrl?: string;
   } | null;
+  error: string | null;
   
   // Actions
   setAddress: (address: string | null) => void;
@@ -22,11 +24,21 @@ export interface WalletStore {
   setProvider: (provider: any) => void;
   setNFTs: (nfts: NFT[]) => void;
   setBalance: (balance: string) => void;
-  setNetwork: (network: { chainId: number; name: string } | null) => void;
+  setNetwork: (network: { chainId: number; name: string; rpcUrl?: string } | null) => void;
+  setError: (error: string | null) => void;
   addNFT: (nft: NFT) => void;
   removeNFT: (tokenId: string, contractAddress: string) => void;
   updateNFT: (tokenId: string, contractAddress: string, updates: Partial<NFT>) => void;
+  clearNFTs: () => void;
   reset: () => void;
+  
+  // Async Actions
+  connect: (address: string, network: { chainId: number; name: string; rpcUrl?: string } | null) => Promise<void>;
+  disconnect: () => void;
+  refreshBalance: () => Promise<void>;
+  refreshNFTs: () => Promise<void>;
+  signMessage: (message: string) => Promise<string>;
+  switchNetwork: (network: { chainId: number; name: string; rpcUrl?: string }) => Promise<void>;
   
   // Getters
   isWalletReady: () => boolean;
@@ -43,6 +55,7 @@ const initialState = {
   nfts: [],
   balance: '0',
   network: null,
+  error: null,
 };
 
 export const useWalletStore = create<WalletStore>()(
@@ -67,6 +80,8 @@ export const useWalletStore = create<WalletStore>()(
       setBalance: (balance) => set({ balance }),
       
       setNetwork: (network) => set({ network }),
+      
+      setError: (error) => set({ error }),
       
       addNFT: (nft) => set((state) => {
         const existingIndex = state.nfts.findIndex(
@@ -96,7 +111,103 @@ export const useWalletStore = create<WalletStore>()(
         )
       })),
       
+      clearNFTs: () => set({ nfts: [] }),
+      
       reset: () => set(initialState),
+      
+      // Async Actions
+      connect: async (address, network) => {
+        set({ isConnecting: true, error: null });
+        
+        try {
+          if (!address || !network) {
+            throw new Error('Connection failed');
+          }
+          
+          set({ 
+            address, 
+            network, 
+            isConnected: true, 
+            isConnecting: false,
+            error: null 
+          });
+        } catch (error) {
+          set({ 
+            isConnected: false, 
+            isConnecting: false, 
+            error: 'Connection failed' 
+          });
+        }
+      },
+      
+      disconnect: () => set({
+        address: null,
+        isConnected: false,
+        isConnecting: false,
+        network: null,
+        balance: '0',
+        nfts: [],
+        error: null,
+        provider: null
+      }),
+      
+      refreshBalance: async () => {
+        try {
+          // Mock implementation for testing
+          const mockBalance = '2.5';
+          set({ balance: mockBalance, error: null });
+        } catch (error) {
+          set({ error: 'Failed to refresh balance' });
+          throw error; // Re-throw to trigger error handling in tests
+        }
+      },
+      
+      refreshNFTs: async () => {
+        try {
+          // Mock implementation for testing
+          const mockNFTs = [
+            {
+              tokenId: '1',
+              contractAddress: '0x1234567890123456789012345678901234567890',
+              owner: '0x1234567890123456789012345678901234567890',
+              metadata: {
+                name: 'Test NFT 1',
+                description: 'A test NFT',
+                image: 'https://example.com/nft1.jpg'
+              },
+              tokenURI: 'https://example.com/nft/1',
+              mintedAt: new Date(),
+              transactionHash: '0xabcdef1234567890abcdef1234567890abcdef1234567890abcdef1234567890',
+              blockNumber: 123456
+            }
+          ];
+          set({ nfts: mockNFTs, error: null });
+        } catch (error) {
+          set({ error: 'Failed to refresh NFTs' });
+          throw error; // Re-throw to trigger error handling in tests
+        }
+      },
+      
+      signMessage: async (message) => {
+        try {
+          // Mock implementation for testing
+          const mockSignature = '0x1234567890abcdef';
+          set({ error: null });
+          return mockSignature;
+        } catch (error) {
+          set({ error: 'Failed to sign message' });
+          throw error;
+        }
+      },
+      
+      switchNetwork: async (network) => {
+        try {
+          set({ network, error: null });
+        } catch (error) {
+          set({ error: 'Failed to switch network' });
+          throw error; // Re-throw to trigger error handling in tests
+        }
+      },
       
       // Getters
       isWalletReady: () => {

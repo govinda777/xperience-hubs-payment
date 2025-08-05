@@ -110,7 +110,7 @@ export const useContractStore = create<ContractStore>()((set, get) => ({
   
   getAvailableProducts: () => {
     const state = get();
-    return state.products.filter(product => product.isAvailable());
+    return state.products.filter(product => product.isActive && product.availability === 'available');
   },
   
   getTotalProducts: () => {
