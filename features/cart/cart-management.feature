@@ -1,97 +1,97 @@
-Feature: Gerenciamento do Carrinho de Compras
-  Como um cliente do marketplace
-  Eu quero gerenciar produtos no meu carrinho
-  Para que eu possa revisar e ajustar minha compra antes de finalizar
+Feature: Shopping Cart Management
+  As a marketplace customer
+  I want to manage products in my cart
+  So that I can review and adjust my purchase before finalizing
 
   Background:
-    Given que o sistema de carrinho está funcionando
-    And que existem produtos disponíveis no marketplace
-    And que o localStorage está disponível para persistência
+    Given the cart system is working
+    And there are products available in the marketplace
+    And localStorage is available for persistence
 
-  Scenario: Adicionar produto ao carrinho vazio
-    Given que o carrinho está vazio
-    And que existe um produto "Camiseta" com preço R$ 50,00
-    When o cliente adiciona 2 unidades do produto ao carrinho
-    Then o carrinho deve conter 1 item
-    And o item deve ter quantidade 2
-    And o total do carrinho deve ser R$ 100,00
-    And o carrinho deve ser salvo no localStorage
+  Scenario: Add product to empty cart
+    Given the cart is empty
+    And there is a product "T-Shirt" with price $50.00
+    When the customer adds 2 units of the product to the cart
+    Then the cart should contain 1 item
+    And the item should have quantity 2
+    And the cart total should be $100.00
+    And the cart should be saved to localStorage
 
-  Scenario: Adicionar produto já existente no carrinho
-    Given que existe um produto "Camiseta" já no carrinho com quantidade 1
-    When o cliente adiciona mais 2 unidades do mesmo produto
-    Then o carrinho deve conter 1 item
-    And a quantidade do item deve ser 3
-    And o total deve ser atualizado para R$ 150,00
+  Scenario: Add existing product to cart
+    Given there is a product "T-Shirt" already in the cart with quantity 1
+    When the customer adds 2 more units of the same product
+    Then the cart should contain 1 item
+    And the item quantity should be 3
+    And the total should be updated to $150.00
 
-  Scenario: Atualizar quantidade de produto no carrinho
-    Given que existe um produto "Camiseta" no carrinho com quantidade 2
-    When o cliente atualiza a quantidade para 5
-    Then a quantidade do produto deve ser 5
-    And o total deve ser atualizado para R$ 250,00
-    And as alterações devem ser salvas no localStorage
+  Scenario: Update product quantity in cart
+    Given there is a product "T-Shirt" in the cart with quantity 2
+    When the customer updates the quantity to 5
+    Then the product quantity should be 5
+    And the total should be updated to $250.00
+    And changes should be saved to localStorage
 
-  Scenario: Remover produto do carrinho
-    Given que existem 2 produtos diferentes no carrinho
-    When o cliente remove um dos produtos
-    Then o carrinho deve conter apenas 1 produto
-    And o total deve ser recalculado
-    And o produto removido não deve aparecer na lista
+  Scenario: Remove product from cart
+    Given there are 2 different products in the cart
+    When the customer removes one of the products
+    Then the cart should contain only 1 product
+    And the total should be recalculated
+    And the removed product should not appear in the list
 
-  Scenario: Limpar carrinho completamente
-    Given que existem 3 produtos no carrinho
-    When o cliente limpa o carrinho
-    Then o carrinho deve estar vazio
-    And o total deve ser R$ 0,00
-    And o localStorage deve ser limpo
+  Scenario: Clear cart completely
+    Given there are 3 products in the cart
+    When the customer clears the cart
+    Then the cart should be empty
+    And the total should be $0.00
+    And localStorage should be cleared
 
-  Scenario: Verificar se produto está no carrinho
-    Given que existe um produto "Camiseta" no carrinho
-    When o sistema verifica se o produto está no carrinho
-    Then deve retornar verdadeiro
-    When o sistema verifica um produto que não está no carrinho
-    Then deve retornar falso
+  Scenario: Check if product is in cart
+    Given there is a product "T-Shirt" in the cart
+    When the system checks if the product is in the cart
+    Then it should return true
+    When the system checks a product that is not in the cart
+    Then it should return false
 
-  Scenario: Obter quantidade específica de produto
-    Given que existe um produto "Camiseta" no carrinho com quantidade 3
-    When o sistema consulta a quantidade do produto
-    Then deve retornar 3
-    When consulta um produto que não está no carrinho
-    Then deve retornar 0
+  Scenario: Get specific product quantity
+    Given there is a product "T-Shirt" in the cart with quantity 3
+    When the system queries the product quantity
+    Then it should return 3
+    When querying a product that is not in the cart
+    Then it should return 0
 
-  Scenario: Carrinho com produtos com desconto
-    Given que existe um produto "Tênis" com preço R$ 200,00 e 10% de desconto
-    When o cliente adiciona 1 unidade ao carrinho
-    Then o subtotal deve ser R$ 200,00
-    And o total com desconto deve ser R$ 180,00
-    And a economia deve ser exibida como R$ 20,00
+  Scenario: Cart with discounted products
+    Given there is a product "Sneakers" with price $200.00 and 10% discount
+    When the customer adds 1 unit to the cart
+    Then the subtotal should be $200.00
+    And the total with discount should be $180.00
+    And the savings should be displayed as $20.00
 
-  Scenario: Persistência do carrinho entre sessões
-    Given que o cliente adiciona produtos ao carrinho
-    And fecha o navegador
-    When ele abre o navegador novamente
-    And acessa o site
-    Then o carrinho deve manter os produtos adicionados
-    And as quantidades devem estar corretas
-    And os totais devem estar atualizados
+  Scenario: Cart persistence between sessions
+    Given the customer adds products to the cart
+    And closes the browser
+    When they open the browser again
+    And access the site
+    Then the cart should maintain the added products
+    And quantities should be correct
+    And totals should be updated
 
-  Scenario: Carrinho com produto de preço zero
-    Given que existe um produto gratuito "Amostra Grátis"
-    When o cliente adiciona 3 unidades ao carrinho
-    Then o total deve permanecer R$ 0,00
-    But o produto deve aparecer no carrinho
-    And a quantidade deve ser 3
+  Scenario: Cart with zero price product
+    Given there is a free product "Free Sample"
+    When the customer adds 3 units to the cart
+    Then the total should remain $0.00
+    But the product should appear in the cart
+    And the quantity should be 3
 
-  Scenario: Carrinho com produto esgotado
-    Given que existe um produto "Produto Limitado" com estoque 0
-    When o cliente tenta adicionar o produto ao carrinho
-    Then deve ver mensagem "Produto indisponível"
-    And o produto não deve ser adicionado ao carrinho
+  Scenario: Cart with out of stock product
+    Given there is a product "Limited Product" with stock 0
+    When the customer tries to add the product to the cart
+    Then they should see message "Product unavailable"
+    And the product should not be added to the cart
 
-  Scenario: Atualização de dados do produto no carrinho
-    Given que existe um produto no carrinho
-    When os dados do produto são atualizados (preço, nome, etc.)
-    And o carrinho é recarregado
-    Then deve exibir os dados atualizados do produto
-    And os totais devem ser recalculados
-    And as alterações devem ser visíveis imediatamente
+  Scenario: Update product data in cart
+    Given there is a product in the cart
+    When the product data is updated (price, name, etc.)
+    And the cart is reloaded
+    Then it should display the updated product data
+    And totals should be recalculated
+    And changes should be visible immediately

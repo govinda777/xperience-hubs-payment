@@ -5,7 +5,7 @@ import { useCart } from '../useCart';
 import { Given, When, Then, TestDataBuilder } from '@/lib/bdd/helpers';
 import { Product } from '@/core/entities/Product';
 
-// Carrega o arquivo .feature correspondente
+// Load the corresponding .feature file
 const feature = loadFeature('./features/cart/cart-management.feature');
 
 defineFeature(feature, test => {
@@ -26,25 +26,40 @@ defineFeature(feature, test => {
       value: localStorageMock,
     });
 
-    // Criar produtos de teste
+    // Create test products
     product1 = TestDataBuilder.createProduct({
       id: 'product-1',
-      name: 'Camiseta',
-      price: TestDataBuilder.createMoney(5000), // R$ 50,00
+      name: 'T-Shirt',
+      price: TestDataBuilder.createMoney(5000), // $50.00
     });
 
     product2 = TestDataBuilder.createProduct({
       id: 'product-2',
-      name: 'Tênis',
-      price: TestDataBuilder.createMoney(20000), // R$ 200,00
+      name: 'Sneakers',
+      price: TestDataBuilder.createMoney(20000), // $200.00
       // discountPercentage: 10,
     });
 
     jest.clearAllMocks();
   });
 
-  test('Adicionar produto ao carrinho vazio', ({ given, when, then, and }) => {
-    given('que o carrinho está vazio', () => {
+  test('Add product to empty cart', ({ given, when, then, and }) => {
+    given('the cart system is working', () => {
+      // Initial system setup
+      expect(useCart).toBeDefined();
+    });
+
+    and('there are products available in the marketplace', () => {
+      expect(product1).toBeDefined();
+      expect(product2).toBeDefined();
+    });
+
+    and('localStorage is available for persistence', () => {
+      expect(localStorageMock).toBeDefined();
+      expect(localStorageMock.setItem).toBeDefined();
+    });
+
+    given('the cart is empty', () => {
       localStorageMock.getItem.mockReturnValue(null);
       hookResult = renderHook(() => useCart());
       
@@ -52,103 +67,149 @@ defineFeature(feature, test => {
       expect(hookResult.result.current.totalItems).toBe(0);
     });
 
-    and('que existe um produto "Camiseta" com preço R$ 50,00', () => {
-      expect(product1.name).toBe('Camiseta');
-      expect(product1.price).toBe(50);
+    and(/^there is a product "(.*)" with price \$(\d+)\.(\d+)$/, (productName, dollars, cents) => {
+      expect(product1.name).toBe(productName);
+      const expectedPrice = parseInt(dollars) + (parseInt(cents) / 100);
+      expect(product1.price).toBe(expectedPrice);
     });
 
-    when('o cliente adiciona 2 unidades do produto ao carrinho', () => {
+    when(/^the customer adds (\d+) units of the product to the cart$/, (quantity) => {
       act(() => {
-        hookResult.result.current.addToCart(product1, 2);
+        hookResult.result.current.addToCart(product1, parseInt(quantity));
       });
     });
 
-    then('o carrinho deve conter 1 item', () => {
-      expect(hookResult.result.current.items).toHaveLength(1);
+    then(/^the cart should contain (\d+) item$/, (itemCount) => {
+      expect(hookResult.result.current.items).toHaveLength(parseInt(itemCount));
     });
 
-    and('o item deve ter quantidade 2', () => {
-      expect(hookResult.result.current.items[0].quantity).toBe(2);
-      expect(hookResult.result.current.totalItems).toBe(2);
+    and(/^the item should have quantity (\d+)$/, (quantity) => {
+      expect(hookResult.result.current.items[0].quantity).toBe(parseInt(quantity));
+      expect(hookResult.result.current.totalItems).toBe(parseInt(quantity));
     });
 
-    and('o total do carrinho deve ser R$ 100,00', () => {
-      expect(hookResult.result.current.totalPrice).toBe(100);
+    and(/^the cart total should be \$(\d+)\.(\d+)$/, (dollars, cents) => {
+      const expectedTotal = parseInt(dollars) + (parseInt(cents) / 100);
+      expect(hookResult.result.current.totalPrice).toBe(expectedTotal);
     });
 
-    and('o carrinho deve ser salvo no localStorage', () => {
+    and('the cart should be saved to localStorage', () => {
       expect(localStorageMock.setItem).toHaveBeenCalledWith(
         'cart',
-        expect.stringContaining('Camiseta')
+        expect.stringContaining('T-Shirt')
       );
     });
   });
 
-  test('Adicionar produto já existente no carrinho', ({ given, when, then, and }) => {
-    given('que existe um produto "Camiseta" já no carrinho com quantidade 1', () => {
+  test('Add existing product to cart', ({ given, when, then, and }) => {
+    given('the cart system is working', () => {
+      expect(useCart).toBeDefined();
+    });
+
+    and('there are products available in the marketplace', () => {
+      expect(product1).toBeDefined();
+      expect(product2).toBeDefined();
+    });
+
+    and('localStorage is available for persistence', () => {
+      expect(localStorageMock).toBeDefined();
+      expect(localStorageMock.setItem).toBeDefined();
+    });
+
+    given(/^there is a product "(.*)" already in the cart with quantity (\d+)$/, (productName, quantity) => {
       hookResult = renderHook(() => useCart());
       
       act(() => {
-        hookResult.result.current.addToCart(product1, 1);
+        hookResult.result.current.addToCart(product1, parseInt(quantity));
       });
       
       expect(hookResult.result.current.items).toHaveLength(1);
-      expect(hookResult.result.current.items[0].quantity).toBe(1);
+      expect(hookResult.result.current.items[0].quantity).toBe(parseInt(quantity));
     });
 
-    when('o cliente adiciona mais 2 unidades do mesmo produto', () => {
+    when(/^the customer adds (\d+) more units of the same product$/, (quantity) => {
       act(() => {
-        hookResult.result.current.addToCart(product1, 2);
+        hookResult.result.current.addToCart(product1, parseInt(quantity));
       });
     });
 
-    then('o carrinho deve conter 1 item', () => {
-      expect(hookResult.result.current.items).toHaveLength(1);
+    then(/^the cart should contain (\d+) item$/, (itemCount) => {
+      expect(hookResult.result.current.items).toHaveLength(parseInt(itemCount));
     });
 
-    and('a quantidade do item deve ser 3', () => {
-      expect(hookResult.result.current.items[0].quantity).toBe(3);
-      expect(hookResult.result.current.totalItems).toBe(3);
+    and(/^the item quantity should be (\d+)$/, (quantity) => {
+      expect(hookResult.result.current.items[0].quantity).toBe(parseInt(quantity));
+      expect(hookResult.result.current.totalItems).toBe(parseInt(quantity));
     });
 
-    and('o total deve ser atualizado para R$ 150,00', () => {
-      expect(hookResult.result.current.totalPrice).toBe(150);
+    and(/^the total should be updated to \$(\d+)\.(\d+)$/, (dollars, cents) => {
+      const expectedTotal = parseInt(dollars) + (parseInt(cents) / 100);
+      expect(hookResult.result.current.totalPrice).toBe(expectedTotal);
     });
   });
 
-  test('Atualizar quantidade de produto no carrinho', ({ given, when, then, and }) => {
-    given('que existe um produto "Camiseta" no carrinho com quantidade 2', () => {
+  test('Update product quantity in cart', ({ given, when, then, and }) => {
+    given('the cart system is working', () => {
+      expect(useCart).toBeDefined();
+    });
+
+    and('there are products available in the marketplace', () => {
+      expect(product1).toBeDefined();
+      expect(product2).toBeDefined();
+    });
+
+    and('localStorage is available for persistence', () => {
+      expect(localStorageMock).toBeDefined();
+      expect(localStorageMock.setItem).toBeDefined();
+    });
+
+    given(/^there is a product "(.*)" in the cart with quantity (\d+)$/, (productName, quantity) => {
       hookResult = renderHook(() => useCart());
       
       act(() => {
-        hookResult.result.current.addToCart(product1, 2);
+        hookResult.result.current.addToCart(product1, parseInt(quantity));
       });
       
-      expect(hookResult.result.current.items[0].quantity).toBe(2);
+      expect(hookResult.result.current.items[0].quantity).toBe(parseInt(quantity));
     });
 
-    when('o cliente atualiza a quantidade para 5', () => {
+    when(/^the customer updates the quantity to (\d+)$/, (quantity) => {
       act(() => {
-        hookResult.result.current.updateQuantity(product1.id, 5);
+        hookResult.result.current.updateQuantity(product1.id, parseInt(quantity));
       });
     });
 
-    then('a quantidade do produto deve ser 5', () => {
-      expect(hookResult.result.current.items[0].quantity).toBe(5);
-      expect(hookResult.result.current.totalItems).toBe(5);
+    then(/^the product quantity should be (\d+)$/, (quantity) => {
+      expect(hookResult.result.current.items[0].quantity).toBe(parseInt(quantity));
+      expect(hookResult.result.current.totalItems).toBe(parseInt(quantity));
     });
 
-    and('o total deve ser atualizado para R$ 250,00', () => {
-      expect(hookResult.result.current.totalPrice).toBe(250);
+    and(/^the total should be updated to \$(\d+)\.(\d+)$/, (dollars, cents) => {
+      const expectedTotal = parseInt(dollars) + (parseInt(cents) / 100);
+      expect(hookResult.result.current.totalPrice).toBe(expectedTotal);
     });
 
-    and('as alterações devem ser salvas no localStorage', () => {
+    and('changes should be saved to localStorage', () => {
       expect(localStorageMock.setItem).toHaveBeenCalled();
     });
   });
 
-  test('Remover produto do carrinho', ({ given, when, then, and }) => {
-    given('que existem 2 produtos diferentes no carrinho', () => {
+  test('Remove product from cart', ({ given, when, then, and }) => {
+    given('the cart system is working', () => {
+      expect(useCart).toBeDefined();
+    });
+
+    and('there are products available in the marketplace', () => {
+      expect(product1).toBeDefined();
+      expect(product2).toBeDefined();
+    });
+
+    and('localStorage is available for persistence', () => {
+      expect(localStorageMock).toBeDefined();
+      expect(localStorageMock.setItem).toBeDefined();
+    });
+
+    given('there are 2 different products in the cart', () => {
       hookResult = renderHook(() => useCart());
       
       act(() => {
@@ -159,36 +220,50 @@ defineFeature(feature, test => {
       expect(hookResult.result.current.items).toHaveLength(2);
     });
 
-    when('o cliente remove um dos produtos', () => {
+    when('the customer removes one of the products', () => {
       act(() => {
         hookResult.result.current.removeFromCart(product1.id);
       });
     });
 
-    then('o carrinho deve conter apenas 1 produto', () => {
+    then('the cart should contain only 1 product', () => {
       expect(hookResult.result.current.items).toHaveLength(1);
     });
 
-    and('o total deve ser recalculado', () => {
-      // Produto2 tem desconto de 10%: 200 * 0.9 = 180
+    and('the total should be recalculated', () => {
+      // Product2 has 10% discount: 200 * 0.9 = 180
       expect(hookResult.result.current.totalPrice).toBe(180);
     });
 
-    and('o produto removido não deve aparecer na lista', () => {
+    and('the removed product should not appear in the list', () => {
       const remainingProduct = hookResult.result.current.items[0];
       expect(remainingProduct.product.id).toBe(product2.id);
       expect(remainingProduct.product.id).not.toBe(product1.id);
     });
   });
 
-  test('Limpar carrinho completamente', ({ given, when, then, and }) => {
-    given('que existem 3 produtos no carrinho', () => {
+  test('Clear cart completely', ({ given, when, then, and }) => {
+    given('the cart system is working', () => {
+      expect(useCart).toBeDefined();
+    });
+
+    and('there are products available in the marketplace', () => {
+      expect(product1).toBeDefined();
+      expect(product2).toBeDefined();
+    });
+
+    and('localStorage is available for persistence', () => {
+      expect(localStorageMock).toBeDefined();
+      expect(localStorageMock.setItem).toBeDefined();
+    });
+
+    given('there are 3 products in the cart', () => {
       hookResult = renderHook(() => useCart());
       
       const product3 = TestDataBuilder.createProduct({
         id: 'product-3',
-        name: 'Calça',
-        price: TestDataBuilder.createMoney(8000), // R$ 80,00
+        name: 'Pants',
+        price: TestDataBuilder.createMoney(8000), // $80.00
       });
       
       act(() => {
@@ -200,35 +275,50 @@ defineFeature(feature, test => {
       expect(hookResult.result.current.items).toHaveLength(3);
     });
 
-    when('o cliente limpa o carrinho', () => {
+    when('the customer clears the cart', () => {
       act(() => {
         hookResult.result.current.clearCart();
       });
     });
 
-    then('o carrinho deve estar vazio', () => {
+    then('the cart should be empty', () => {
       expect(hookResult.result.current.items).toEqual([]);
       expect(hookResult.result.current.totalItems).toBe(0);
     });
 
-    and('o total deve ser R$ 0,00', () => {
+    and('the total should be $0.00', () => {
       expect(hookResult.result.current.totalPrice).toBe(0);
       expect(hookResult.result.current.subtotal).toBe(0);
     });
 
-    and('o localStorage deve ser limpo', () => {
+    and('localStorage should be cleared', () => {
       expect(localStorageMock.setItem).toHaveBeenCalledWith('cart', '[]');
     });
   });
 
-  test('Carrinho com produtos com desconto', ({ given, when, then, and }) => {
-    given('que existe um produto "Tênis" com preço R$ 200,00 e 10% de desconto', () => {
-      expect(product2.name).toBe('Tênis');
-      expect(product2.price).toBe(200);
-      expect(product2.discountPercentage).toBe(10);
+  test('Cart with discounted products', ({ given, when, then, and }) => {
+    given('the cart system is working', () => {
+      expect(useCart).toBeDefined();
     });
 
-    when('o cliente adiciona 1 unidade ao carrinho', () => {
+    and('there are products available in the marketplace', () => {
+      expect(product1).toBeDefined();
+      expect(product2).toBeDefined();
+    });
+
+    and('localStorage is available for persistence', () => {
+      expect(localStorageMock).toBeDefined();
+      expect(localStorageMock.setItem).toBeDefined();
+    });
+
+    given(/^there is a product "(.*)" with price \$(\d+)\.(\d+) and (\d+)% discount$/, (productName, dollars, cents, discount) => {
+      expect(product2.name).toBe(productName);
+      const expectedPrice = parseInt(dollars) + (parseInt(cents) / 100);
+      expect(product2.price).toBe(expectedPrice);
+      expect(product2.discountPercentage).toBe(parseInt(discount));
+    });
+
+    when('the customer adds 1 unit to the cart', () => {
       hookResult = renderHook(() => useCart());
       
       act(() => {
@@ -236,23 +326,40 @@ defineFeature(feature, test => {
       });
     });
 
-    then('o subtotal deve ser R$ 200,00', () => {
-      expect(hookResult.result.current.subtotal).toBe(200);
+    then(/^the subtotal should be \$(\d+)\.(\d+)$/, (dollars, cents) => {
+      const expectedSubtotal = parseInt(dollars) + (parseInt(cents) / 100);
+      expect(hookResult.result.current.subtotal).toBe(expectedSubtotal);
     });
 
-    and('o total com desconto deve ser R$ 180,00', () => {
+    and(/^the total with discount should be \$(\d+)\.(\d+)$/, (dollars, cents) => {
+      const expectedTotal = parseInt(dollars) + (parseInt(cents) / 100);
       // 200 * (1 - 0.10) = 180
-      expect(hookResult.result.current.totalPrice).toBe(180);
+      expect(hookResult.result.current.totalPrice).toBe(expectedTotal);
     });
 
-    and('a economia deve ser exibida como R$ 20,00', () => {
-      const economia = hookResult.result.current.subtotal - hookResult.result.current.totalPrice;
-      expect(economia).toBe(20);
+    and(/^the savings should be displayed as \$(\d+)\.(\d+)$/, (dollars, cents) => {
+      const expectedSavings = parseInt(dollars) + (parseInt(cents) / 100);
+      const savings = hookResult.result.current.subtotal - hookResult.result.current.totalPrice;
+      expect(savings).toBe(expectedSavings);
     });
   });
 
-  test('Verificar se produto está no carrinho', ({ given, when, then }) => {
-    given('que existe um produto "Camiseta" no carrinho', () => {
+  test('Check if product is in cart', ({ given, when, then, and }) => {
+    given('the cart system is working', () => {
+      expect(useCart).toBeDefined();
+    });
+
+    and('there are products available in the marketplace', () => {
+      expect(product1).toBeDefined();
+      expect(product2).toBeDefined();
+    });
+
+    and('localStorage is available for persistence', () => {
+      expect(localStorageMock).toBeDefined();
+      expect(localStorageMock.setItem).toBeDefined();
+    });
+
+    given(/^there is a product "(.*)" in the cart$/, (productName) => {
       hookResult = renderHook(() => useCart());
       
       act(() => {
@@ -260,19 +367,19 @@ defineFeature(feature, test => {
       });
     });
 
-    when('o sistema verifica se o produto está no carrinho', () => {
-      // Esta verificação será feita no then
+    when('the system checks if the product is in the cart', () => {
+      // This check will be done in the then
     });
 
-    then('deve retornar verdadeiro', () => {
+    then('it should return true', () => {
       expect(hookResult.result.current.isInCart(product1.id)).toBe(true);
     });
 
-    when('o sistema verifica um produto que não está no carrinho', () => {
-      // Esta verificação será feita no then
+    when('the system checks a product that is not in the cart', () => {
+      // This check will be done in the then
     });
 
-    then('deve retornar falso', () => {
+    then('it should return false', () => {
       expect(hookResult.result.current.isInCart(product2.id)).toBe(false);
     });
   });

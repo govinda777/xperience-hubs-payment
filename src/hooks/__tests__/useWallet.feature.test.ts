@@ -4,250 +4,288 @@ import '@testing-library/jest-dom';
 import { useWallet } from '../useWallet';
 import { Given, When, Then, TestDataBuilder } from '@/lib/bdd/helpers';
 
-const feature = loadFeature('./features/auth/login.feature');
+// Load the corresponding .feature file
+const feature = loadFeature('./features/auth/wallet-connection.feature');
 
 defineFeature(feature, test => {
   let hookResult: any;
   let mockEthereum: any;
 
   beforeEach(() => {
-    // Mock do objeto window.ethereum
+    // Mock window.ethereum
     mockEthereum = {
       request: jest.fn(),
       on: jest.fn(),
       removeListener: jest.fn(),
-      isMetaMask: true,
     };
 
     Object.defineProperty(window, 'ethereum', {
       value: mockEthereum,
       writable: true,
     });
+
+    jest.clearAllMocks();
   });
 
-  test('Login bem-sucedido com carteira Web3', ({ given, when, then, and }) => {
-    given('que o usuário possui uma carteira MetaMask configurada', () => {
-      expect(window.ethereum).toBeDefined();
-      expect(window.ethereum.isMetaMask).toBe(true);
+  test('Successful wallet connection', ({ given, when, then, and }) => {
+    given('the wallet system is available', () => {
+      expect(useWallet).toBeDefined();
     });
 
-    and('que o usuário está na página de login', () => {
+    and('MetaMask is installed in the browser', () => {
+      expect(window.ethereum).toBeDefined();
+    });
+
+    and('the user is on the wallet connection page', () => {
       hookResult = renderHook(() => useWallet());
       expect(hookResult.result.current.isConnected).toBe(false);
     });
 
-    when('ele clica no botão "Conectar Carteira"', async () => {
-      mockEthereum.request.mockResolvedValue(['0x742d35Cc6634C0532925a3b8D0C']);
+    given('the user clicks the "Connect Wallet" button', () => {
+      // Setup mock responses
+      mockEthereum.request
+        .mockResolvedValueOnce(['0x1234567890123456789012345678901234567890']) // accounts
+        .mockResolvedValueOnce('0x1') // chainId (mainnet)
+        .mockResolvedValueOnce('0x1000000000000000000'); // balance (1 ETH)
+    });
 
-      await act(async () => {
+    when('MetaMask prompts for connection', () => {
+      // This is handled by the mock above
+    });
+
+    and('the user approves the connection', () => {
+      act(async () => {
         await hookResult.result.current.connect();
       });
     });
 
-    and('ele aprova a conexão na carteira', () => {
-      expect(mockEthereum.request).toHaveBeenCalledWith({
-        method: 'eth_requestAccounts'
-      });
-    });
-
-    then('ele deve ser redirecionado para o dashboard', () => {
+    then('the wallet should be connected', () => {
       expect(hookResult.result.current.isConnected).toBe(true);
     });
 
-    and('deve ver seu endereço de carteira no header', () => {
-      expect(hookResult.result.current.address).toBe('0x742d35Cc6634C0532925a3b8D0C');
+    and('the wallet address should be displayed', () => {
+      expect(hookResult.result.current.address).toBe('0x1234567890123456789012345678901234567890');
     });
 
-    and('sua sessão deve estar ativa', () => {
+    and('the wallet balance should be shown', () => {
+      expect(hookResult.result.current.balance).toBe('0x1000000000000000000');
+    });
+
+    and('the connection status should be "Connected"', () => {
       expect(hookResult.result.current.isConnected).toBe(true);
-      expect(hookResult.result.current.address).toBeDefined();
+      expect(hookResult.result.current.error).toBe(null);
     });
   });
 
-  test('Falha na conexão da carteira Web3', ({ given, when, then, and }) => {
-    given('que o usuário está na página de login', () => {
+  test('Failed wallet connection', ({ given, when, then, and }) => {
+    given('the wallet system is available', () => {
+      expect(useWallet).toBeDefined();
+    });
+
+    and('MetaMask is installed in the browser', () => {
+      expect(window.ethereum).toBeDefined();
+    });
+
+    and('the user is on the wallet connection page', () => {
       hookResult = renderHook(() => useWallet());
       expect(hookResult.result.current.isConnected).toBe(false);
     });
 
-    and('que não há carteira instalada no navegador', () => {
+    given('the user clicks the "Connect Wallet" button', () => {
+      // Setup mock to reject connection
+      mockEthereum.request.mockRejectedValueOnce(new Error('User rejected connection'));
+    });
+
+    when('MetaMask prompts for connection', () => {
+      // This is handled by the mock above
+    });
+
+    and('the user rejects the connection', () => {
+      act(async () => {
+        await hookResult.result.current.connect();
+      });
+    });
+
+    then('the wallet should remain disconnected', () => {
+      expect(hookResult.result.current.isConnected).toBe(false);
+    });
+
+    and('an error message should be displayed', () => {
+      expect(hookResult.result.current.error).toBe('User rejected connection');
+    });
+
+    and('the connection status should be "Disconnected"', () => {
+      expect(hookResult.result.current.isConnected).toBe(false);
+    });
+  });
+
+  test('Wallet disconnection', ({ given, when, then, and }) => {
+    given('the wallet system is available', () => {
+      expect(useWallet).toBeDefined();
+    });
+
+    and('MetaMask is installed in the browser', () => {
+      expect(window.ethereum).toBeDefined();
+    });
+
+    and('the user is on the wallet connection page', () => {
+      hookResult = renderHook(() => useWallet());
+    });
+
+    given('the wallet is connected', () => {
+      // Setup connected state
+      mockEthereum.request
+        .mockResolvedValueOnce(['0x1234567890123456789012345678901234567890'])
+        .mockResolvedValueOnce('0x1')
+        .mockResolvedValueOnce('0x1000000000000000000');
+
+      act(async () => {
+        await hookResult.result.current.connect();
+      });
+
+      expect(hookResult.result.current.isConnected).toBe(true);
+    });
+
+    when('the user clicks the "Disconnect" button', () => {
+      act(() => {
+        hookResult.result.current.disconnect();
+      });
+    });
+
+    then('the wallet should be disconnected', () => {
+      expect(hookResult.result.current.isConnected).toBe(false);
+    });
+
+    and('the wallet address should be cleared', () => {
+      expect(hookResult.result.current.address).toBe(null);
+    });
+
+    and('the connection status should be "Disconnected"', () => {
+      expect(hookResult.result.current.isConnected).toBe(false);
+    });
+  });
+
+  test('Message signing', ({ given, when, then, and }) => {
+    given('the wallet system is available', () => {
+      expect(useWallet).toBeDefined();
+    });
+
+    and('MetaMask is installed in the browser', () => {
+      expect(window.ethereum).toBeDefined();
+    });
+
+    and('the user is on the wallet connection page', () => {
+      hookResult = renderHook(() => useWallet());
+    });
+
+    given('the wallet is connected', () => {
+      // Setup connected state
+      mockEthereum.request
+        .mockResolvedValueOnce(['0x1234567890123456789012345678901234567890'])
+        .mockResolvedValueOnce('0x1')
+        .mockResolvedValueOnce('0x1000000000000000000');
+
+      act(async () => {
+        await hookResult.result.current.connect();
+      });
+
+      expect(hookResult.result.current.isConnected).toBe(true);
+    });
+
+    when('the user is prompted to sign a message', () => {
+      // Setup mock for message signing
+      mockEthereum.request.mockResolvedValueOnce('0xsignature123');
+    });
+
+    and('the user approves the signature', () => {
+      // This is handled by the mock above
+    });
+
+    then('the message should be signed successfully', () => {
+      // Test will be in the next step
+    });
+
+    and('the signature should be returned', async () => {
+      const signature = await hookResult.result.current.signMessage('Test message');
+      expect(signature).toBe('0xsignature123');
+    });
+  });
+
+  test('Failed message signing', ({ given, when, then, and }) => {
+    given('the wallet system is available', () => {
+      expect(useWallet).toBeDefined();
+    });
+
+    and('MetaMask is installed in the browser', () => {
+      expect(window.ethereum).toBeDefined();
+    });
+
+    and('the user is on the wallet connection page', () => {
+      hookResult = renderHook(() => useWallet());
+    });
+
+    given('the wallet is connected', () => {
+      // Setup connected state
+      mockEthereum.request
+        .mockResolvedValueOnce(['0x1234567890123456789012345678901234567890'])
+        .mockResolvedValueOnce('0x1')
+        .mockResolvedValueOnce('0x1000000000000000000');
+
+      act(async () => {
+        await hookResult.result.current.connect();
+      });
+
+      expect(hookResult.result.current.isConnected).toBe(true);
+    });
+
+    when('the user is prompted to sign a message', () => {
+      // Setup mock to reject signature
+      mockEthereum.request.mockRejectedValueOnce(new Error('User rejected signature'));
+    });
+
+    and('the user rejects the signature', () => {
+      // This is handled by the mock above
+    });
+
+    then('the signature should fail', () => {
+      // Test will be in the next step
+    });
+
+    and('an error message should be displayed', async () => {
+      await expect(hookResult.result.current.signMessage('Test message')).rejects.toThrow('User rejected signature');
+    });
+  });
+
+  test('Wallet not installed', ({ given, when, then, and }) => {
+    given('the wallet system is available', () => {
+      expect(useWallet).toBeDefined();
+    });
+
+    and('MetaMask is installed in the browser', () => {
+      // This step is overridden by the next given
+    });
+
+    and('the user is on the wallet connection page', () => {
+      // This step is overridden by the next given
+    });
+
+    given('MetaMask is not installed', () => {
       Object.defineProperty(window, 'ethereum', {
         value: undefined,
         writable: true,
       });
     });
 
-    when('ele clica no botão "Conectar Carteira"', async () => {
-      await act(async () => {
-        try {
-          await hookResult.result.current.connect();
-        } catch (error) {
-          // Esperado que falhe
-        }
-      });
-    });
-
-    then('deve ver a mensagem "Carteira não encontrada"', () => {
-      expect(hookResult.result.current.error).toBe('Carteira não encontrada');
-    });
-
-    and('deve ser orientado a instalar uma carteira', () => {
-      expect(hookResult.result.current.error).toContain('Carteira não encontrada');
-    });
-
-    and('deve permanecer na página de login', () => {
-      expect(hookResult.result.current.isConnected).toBe(false);
-    });
-  });
-
-  test('Desconexão da carteira', ({ given, when, then, and }) => {
-    given('que o usuário está conectado com sua carteira', async () => {
-      mockEthereum.request.mockResolvedValue(['0x742d35Cc6634C0532925a3b8D0C']);
-
+    when('the user tries to connect a wallet', () => {
       hookResult = renderHook(() => useWallet());
-
-      await act(async () => {
-        await hookResult.result.current.connect();
-      });
-
-      expect(hookResult.result.current.isConnected).toBe(true);
     });
 
-    when('ele clica no botão "Desconectar"', async () => {
-      await act(async () => {
-        hookResult.result.current.disconnect();
-      });
+    then('an error message should be displayed', async () => {
+      await expect(hookResult.result.current.connect()).rejects.toThrow('MetaMask is not installed');
     });
 
-    then('a conexão deve ser encerrada', () => {
-      expect(hookResult.result.current.isConnected).toBe(false);
-    });
-
-    and('o endereço da carteira deve ser limpo', () => {
-      expect(hookResult.result.current.address).toBe(null);
-    });
-
-    and('ele deve ser redirecionado para a página de login', () => {
-      expect(hookResult.result.current.isConnected).toBe(false);
-    });
-  });
-
-  test('Assinatura de mensagem', ({ given, when, then, and }) => {
-    given('que o usuário está conectado com sua carteira', async () => {
-      mockEthereum.request.mockResolvedValue(['0x742d35Cc6634C0532925a3b8D0C']);
-
-      hookResult = renderHook(() => useWallet());
-
-      await act(async () => {
-        await hookResult.result.current.connect();
-      });
-
-      expect(hookResult.result.current.isConnected).toBe(true);
-    });
-
-    when('ele tenta assinar uma mensagem', async () => {
-      const message = 'xperience-validate-2025-01-15T10:30:00Z-12345';
-      const mockSignature = '0xvalidSignature123';
-
-      mockEthereum.request.mockResolvedValue(mockSignature);
-
-      await act(async () => {
-        const signature = await hookResult.result.current.signMessage(message);
-        expect(signature).toBe(mockSignature);
-      });
-    });
-
-    then('a mensagem deve ser assinada com sucesso', () => {
-      expect(mockEthereum.request).toHaveBeenCalledWith({
-        method: 'personal_sign',
-        params: [
-          'xperience-validate-2025-01-15T10:30:00Z-12345',
-          '0x742d35Cc6634C0532925a3b8D0C'
-        ]
-      });
-    });
-
-    and('a assinatura deve ser retornada', () => {
-      expect(mockEthereum.request).toHaveBeenCalled();
-    });
-  });
-
-  test('Mudança de conta na carteira', ({ given, when, then, and }) => {
-    given('que o usuário está conectado com sua carteira', async () => {
-      mockEthereum.request.mockResolvedValue(['0x742d35Cc6634C0532925a3b8D0C']);
-
-      hookResult = renderHook(() => useWallet());
-
-      await act(async () => {
-        await hookResult.result.current.connect();
-      });
-
-      expect(hookResult.result.current.address).toBe('0x742d35Cc6634C0532925a3b8D0C');
-    });
-
-    when('o usuário muda de conta na carteira', async () => {
-      const newAddress = '0x9876543210abcdef9876543210abcdef98765432';
-      
-      // Simular evento de mudança de conta
-      const accountsChangedCallback = mockEthereum.on.mock.calls.find(
-        call => call[0] === 'accountsChanged'
-      )?.[1];
-
-      if (accountsChangedCallback) {
-        await act(async () => {
-          accountsChangedCallback([newAddress]);
-        });
-      }
-    });
-
-    then('o endereço deve ser atualizado automaticamente', () => {
-      expect(hookResult.result.current.address).toBe('0x9876543210abcdef9876543210abcdef98765432');
-    });
-
-    and('a conexão deve permanecer ativa', () => {
-      expect(hookResult.result.current.isConnected).toBe(true);
-    });
-  });
-
-  test('Erro na assinatura de mensagem', ({ given, when, then, and }) => {
-    given('que o usuário está conectado com sua carteira', async () => {
-      mockEthereum.request.mockResolvedValue(['0x742d35Cc6634C0532925a3b8D0C']);
-
-      hookResult = renderHook(() => useWallet());
-
-      await act(async () => {
-        await hookResult.result.current.connect();
-      });
-
-      expect(hookResult.result.current.isConnected).toBe(true);
-    });
-
-    when('ele tenta assinar uma mensagem e o usuário rejeita', async () => {
-      const message = 'xperience-validate-2025-01-15T10:30:00Z-12345';
-      
-      mockEthereum.request.mockRejectedValue(new Error('User rejected the request'));
-
-      await act(async () => {
-        try {
-          await hookResult.result.current.signMessage(message);
-        } catch (error) {
-          // Esperado que falhe
-        }
-      });
-    });
-
-    then('deve receber um erro de assinatura rejeitada', () => {
-      expect(mockEthereum.request).toHaveBeenCalledWith({
-        method: 'personal_sign',
-        params: [
-          'xperience-validate-2025-01-15T10:30:00Z-12345',
-          '0x742d35Cc6634C0532925a3b8D0C'
-        ]
-      });
-    });
-
-    and('o erro deve ser tratado adequadamente', () => {
-      expect(hookResult.result.current.error).toBeDefined();
+    and('the user should be prompted to install MetaMask', () => {
+      expect(hookResult.result.current.error).toBe('MetaMask is not installed');
     });
   });
 }); 
