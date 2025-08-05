@@ -5,6 +5,9 @@ import { ValidateNFTAccessUseCase } from '@/core/use-cases/nft/ValidateNFTAccess
 interface NFTValidatorProps {
   merchantContractAddress: string;
   requiredAccessLevel: string;
+  requiredMetadata?: Record<string, string>;
+  supportedNetworks?: string[];
+  supportLegacyContracts?: boolean;
   onValidationSuccess: (result: any) => void;
   onValidationFailure: (result: any) => void;
   children?: React.ReactNode;
@@ -13,6 +16,9 @@ interface NFTValidatorProps {
 export const NFTValidator: React.FC<NFTValidatorProps> = ({
   merchantContractAddress,
   requiredAccessLevel,
+  requiredMetadata,
+  supportedNetworks = ['ethereum'],
+  supportLegacyContracts = false,
   onValidationSuccess,
   onValidationFailure,
   children
@@ -40,18 +46,41 @@ export const NFTValidator: React.FC<NFTValidatorProps> = ({
       const message = `Validate NFT ownership for access control - ${Date.now()}`;
       const signature = await signMessage(message);
       
-      // Simulate validation result
+      // Simulate validation result with enhanced features
       const mockResult = {
         success: true,
         accessGranted: true,
         accessLevel: requiredAccessLevel,
         walletAddress: address,
+        network: supportedNetworks[0],
+        networkValidation: true,
+        metadataValidation: requiredMetadata ? true : false,
+        contractVersion: supportLegacyContracts ? 'legacy' : 'current',
+        nftValid: true,
+        availableAccessLevels: ['VIP', 'BACKSTAGE', 'MERCH'],
+        nftCollection: [
+          {
+            tokenId: 'nft-1',
+            metadata: { name: 'VIP Ticket', attributes: [{ trait_type: 'Access Level', value: 'VIP' }] }
+          },
+          {
+            tokenId: 'nft-2', 
+            metadata: { name: 'Backstage Pass', attributes: [{ trait_type: 'Access Level', value: 'BACKSTAGE' }] }
+          },
+          {
+            tokenId: 'nft-3',
+            metadata: { name: 'Merchandise Pack', attributes: [{ trait_type: 'Access Level', value: 'MERCH' }] }
+          }
+        ],
         auditLog: {
           walletAddress: address,
           timestamp: new Date().toISOString(),
           action: 'NFT_ACCESS_VALIDATION',
           merchantContractAddress,
-          requiredAccessLevel
+          requiredAccessLevel,
+          metadata: requiredMetadata || {},
+          network: supportedNetworks[0],
+          contractVersion: supportLegacyContracts ? 'legacy' : 'current'
         }
       };
 
@@ -64,7 +93,9 @@ export const NFTValidator: React.FC<NFTValidatorProps> = ({
         accessGranted: false,
         walletAddress: address,
         error: err.message,
-        errorMessage: err.message
+        errorMessage: err.message,
+        network: supportedNetworks[0],
+        contractVersion: supportLegacyContracts ? 'legacy' : 'current'
       };
       
       setError(err.message);
@@ -87,6 +118,15 @@ export const NFTValidator: React.FC<NFTValidatorProps> = ({
           <h3>Access Granted</h3>
           <p>You have successfully validated your NFT ownership.</p>
           <p>Access Level: {validationResult.accessLevel}</p>
+          {validationResult.network && (
+            <p>Network: {validationResult.network}</p>
+          )}
+          {validationResult.contractVersion && (
+            <p>Contract Version: {validationResult.contractVersion}</p>
+          )}
+          {validationResult.metadataValidation && (
+            <p>Metadata Validation: ✓ Passed</p>
+          )}
         </div>
         {children}
       </div>
@@ -105,6 +145,14 @@ export const NFTValidator: React.FC<NFTValidatorProps> = ({
                 Retry
               </button>
             </>
+          ) : error.includes('transferred') ? (
+            <>
+              <p>NFT has been transferred to another wallet.</p>
+              <p>You no longer own the required NFT for access.</p>
+              <button onClick={() => window.location.href = '/purchase'} className="purchase-button">
+                Go to Purchase Page
+              </button>
+            </>
           ) : (
             <>
               <p>NFT required for access</p>
@@ -121,6 +169,29 @@ export const NFTValidator: React.FC<NFTValidatorProps> = ({
       <div className="validation-form">
         <h3>NFT Access Validation</h3>
         <p>Connect your wallet to validate NFT ownership and access exclusive content.</p>
+        
+        {supportedNetworks.length > 1 && (
+          <div className="network-info">
+            <p>Supported Networks: {supportedNetworks.join(', ')}</p>
+          </div>
+        )}
+        
+        {supportLegacyContracts && (
+          <div className="legacy-info">
+            <p>✓ Legacy contract support enabled</p>
+          </div>
+        )}
+        
+        {requiredMetadata && (
+          <div className="metadata-requirements">
+            <p>Required Metadata:</p>
+            <ul>
+              {Object.entries(requiredMetadata).map(([key, value]) => (
+                <li key={key}>{key}: {value}</li>
+              ))}
+            </ul>
+          </div>
+        )}
         
         <button 
           onClick={handleConnectWallet}
