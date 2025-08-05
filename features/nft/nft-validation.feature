@@ -1,108 +1,95 @@
-Feature: Validação de NFT para Controle de Acesso
-  Como um usuário que possui NFTs
-  Eu quero acessar conteúdo exclusivo baseado na posse de NFTs
-  Para que eu possa desfrutar de benefícios exclusivos dos meus tokens
+Feature: NFT Validation and Access Control
+  As a customer with purchased NFTs
+  I want to validate my NFT ownership and access exclusive content
+  So that I can prove my purchase and access restricted areas
 
   Background:
-    Given que o sistema de validação NFT está funcionando
-    And que existem NFTs emitidas para diferentes produtos
-    And que o sistema de autenticação por wallet está configurado
+    Given a merchant has deployed their smart contract
+    And the merchant has products with NFT access enabled
+    And the PIX payment system is configured with split payments
 
-  Scenario: Validação bem-sucedida de posse de NFT
-    Given que eu possuo um NFT do produto "VIP Concert Ticket"
-    And que estou conectado com minha wallet "0x123...abc"
-    When eu tento acessar a área exclusiva do evento
-    And eu assino a mensagem de validação
-    Then o sistema deve verificar a posse do NFT on-chain
-    And eu devo ter acesso concedido ao conteúdo exclusivo
-    And minha sessão deve ser marcada como autenticada
+  Scenario: Successful NFT ownership validation for access control
+    Given I have purchased a product with NFT access
+    And the NFT has been minted to my wallet "0x1234567890123456789012345678901234567890"
+    And I am trying to access exclusive content
+    When I connect my wallet to the validation system
+    And I sign a message to prove ownership
+    Then the system should verify I own the required NFT
+    And I should be granted access to exclusive content
+    And my access should be logged for audit purposes
 
-  Scenario: Tentativa de acesso sem NFT
-    Given que eu não possuo NFTs do produto "VIP Concert Ticket"
-    And que estou conectado com minha wallet "0x123...abc"
-    When eu tento acessar a área exclusiva do evento
-    And eu assino a mensagem de validação
-    Then o sistema deve verificar a posse do NFT on-chain
-    And o acesso deve ser negado
-    And eu devo ver a mensagem "NFT necessário para acesso"
+  Scenario: NFT validation with multiple NFTs from same merchant
+    Given I have purchased multiple products from the same merchant
+    And I have accumulated several NFTs in my wallet
+    When I connect my wallet to access premium content
+    And I sign the ownership verification message
+    Then the system should verify I own at least one valid NFT
+    And I should be granted access to all content levels
+    And the system should show my complete NFT collection
 
-  Scenario: Validação com múltiplos NFTs do mesmo produto
-    Given que eu possuo 3 NFTs do produto "VIP Concert Ticket"
-    And que estou conectado com minha wallet "0x123...abc"
-    When eu tento acessar a área exclusiva do evento
-    And eu assino a mensagem de validação
-    Then o sistema deve verificar a posse dos NFTs on-chain
-    And eu devo ter acesso concedido ao conteúdo exclusivo
-    And o sistema deve registrar que eu possuo 3 tokens
+  Scenario: NFT validation failure for non-owner
+    Given I am trying to access exclusive content
+    And I do not own the required NFT
+    When I connect my wallet to the validation system
+    And I attempt to sign the ownership verification
+    Then the system should detect I do not own the required NFT
+    And I should be denied access to exclusive content
+    And I should see a clear message explaining the requirement
 
-  Scenario: Validação com NFT transferida para outra wallet
-    Given que eu transferi meu NFT para outra wallet
-    And que estou conectado com minha wallet original "0x123...abc"
-    When eu tento acessar a área exclusiva do evento
-    And eu assino a mensagem de validação
-    Then o sistema deve verificar a posse do NFT on-chain
-    And o acesso deve ser negado
-    And eu devo ver a mensagem "NFT não encontrado nesta wallet"
+  Scenario: NFT validation with expired or invalid NFT
+    Given I previously owned a valid NFT
+    And the NFT has been transferred to another wallet
+    When I try to access exclusive content
+    And I connect my wallet for validation
+    Then the system should detect I no longer own the NFT
+    And I should be denied access to exclusive content
+    And I should be informed that the NFT has been transferred
 
-  Scenario: Validação com NFT queimada (burned)
-    Given que meu NFT foi queimado (burned)
-    And que estou conectado com minha wallet "0x123...abc"
-    When eu tento acessar a área exclusiva do evento
-    And eu assino a mensagem de validação
-    Then o sistema deve verificar a posse do NFT on-chain
-    And o acesso deve ser negado
-    And eu devo ver a mensagem "NFT não está mais ativo"
+  Scenario: NFT validation with network connectivity issues
+    Given I have a valid NFT in my wallet
+    And the blockchain network is experiencing connectivity issues
+    When I attempt to validate my NFT ownership
+    Then the system should handle the network error gracefully
+    And I should see a temporary access message
+    And the system should retry validation when network is restored
 
-  Scenario: Validação com problemas de conectividade blockchain
-    Given que eu possuo um NFT válido
-    And que estou conectado com minha wallet "0x123...abc"
-    And que há problemas de conectividade com a blockchain
-    When eu tento acessar a área exclusiva do evento
-    And eu assino a mensagem de validação
-    Then o sistema deve tentar verificar a posse do NFT on-chain
-    And deve retornar erro de conectividade
-    And eu devo ver a mensagem "Erro de conectividade. Tente novamente"
+  Scenario: Batch NFT validation for multiple users
+    Given multiple users are trying to access exclusive content simultaneously
+    And each user has valid NFTs from the merchant
+    When the system processes batch validation requests
+    Then each user should be validated independently
+    And all valid NFT owners should be granted access
+    And the system should handle concurrent requests efficiently
 
-  Scenario: Validação com assinatura inválida
-    Given que eu possuo um NFT válido
-    And que estou conectado com minha wallet "0x123...abc"
-    When eu tento acessar a área exclusiva do evento
-    And eu forneço uma assinatura inválida
-    Then o sistema deve rejeitar a assinatura
-    And o acesso deve ser negado
-    And eu devo ver a mensagem "Assinatura inválida"
+  Scenario: NFT metadata validation for specific content access
+    Given I have an NFT with specific metadata attributes
+    And the exclusive content requires specific NFT attributes
+    When I attempt to access the content
+    And the system validates my NFT metadata
+    Then the system should check the NFT's specific attributes
+    And I should only be granted access to content matching my NFT attributes
+    And the validation should be logged with metadata details
 
-  Scenario: Validação de acesso a múltiplas áreas com diferentes NFTs
-    Given que eu possuo NFTs de diferentes produtos:
-      | produto           | quantidade |
-      | VIP Concert       | 1          |
-      | Backstage Pass    | 2          |
-      | Merchandise Pack  | 0          |
-    And que estou conectado com minha wallet "0x123...abc"
-    When eu tento acessar a área "VIP Concert"
-    And eu assino a mensagem de validação
-    Then eu devo ter acesso concedido
-    When eu tento acessar a área "Backstage Pass"
-    And eu assino a mensagem de validação
-    Then eu devo ter acesso concedido
-    When eu tento acessar a área "Merchandise Pack"
-    And eu assino a mensagem de validação
-    Then o acesso deve ser negado
+  Scenario: NFT transfer and access revocation
+    Given I have access to exclusive content with my NFT
+    And I transfer my NFT to another wallet
+    When I try to access the exclusive content again
+    Then the system should detect the NFT transfer
+    And my access should be immediately revoked
+    And I should be redirected to the purchase page
 
-  Scenario: Validação com NFT expirada
-    Given que eu possuo um NFT com data de expiração vencida
-    And que estou conectado com minha wallet "0x123...abc"
-    When eu tento acessar a área exclusiva do evento
-    And eu assino a mensagem de validação
-    Then o sistema deve verificar a validade do NFT
-    And o acesso deve ser negado
-    And eu devo ver a mensagem "NFT expirado"
+  Scenario: NFT validation with different blockchain networks
+    Given the merchant supports multiple blockchain networks
+    And I have NFTs on different networks
+    When I connect my wallet for validation
+    Then the system should detect which network my NFT is on
+    And it should validate the NFT on the correct network
+    And I should be granted access regardless of the network
 
-  Scenario: Validação com NFT de produto cancelado
-    Given que eu possuo um NFT de um produto que foi cancelado
-    And que estou conectado com minha wallet "0x123...abc"
-    When eu tento acessar a área exclusiva do evento
-    And eu assino a mensagem de validação
-    Then o sistema deve verificar o status do produto
-    And o acesso deve ser negado
-    And eu devo ver a mensagem "Evento cancelado" 
+  Scenario: NFT validation with smart contract upgrades
+    Given the merchant's smart contract has been upgraded
+    And I have an NFT from the old contract version
+    When I attempt to validate my NFT ownership
+    Then the system should handle both old and new contract versions
+    And my NFT should still be considered valid
+    And I should be granted access to exclusive content 
